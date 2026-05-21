@@ -42,23 +42,42 @@ namespace ApiLogros.Controllers
         [HttpPatch("completar/{id}")]
         public async Task<IActionResult> CompletarActividad(int id)
         {
+
             using var conexion = _db.ObtenerConexion();
 
-            var resultado =
-                await conexion
-                .QueryFirstOrDefaultAsync
-                <CompletarActividadResponse>("sp_CompletarActividad",
-                    new { UsuarioActividadId = id },
-                    commandType: CommandType.StoredProcedure);
+            // 1. Obtener información de la actividad
+            var actividad = await conexion.QueryFirstOrDefaultAsync<UsuarioActividad>(
+                @"SELECT Id, UsuarioId, Completada
+          FROM UsuarioActividades
+          WHERE Id = @Id",
+                new { Id = id });
+
+            if (actividad == null)
+                return NotFound("Actividad no encontrada");
+
+            // 2. Validar permisos ANTES de completar
+            if (!EsAdmin() && GetIdActual() != actividad.UsuarioId)
+                return Forbid();
+
+            // 3. Validar si ya está completada
+            if (actividad.Completada)
+                return BadRequest("La actividad ya fue completada");
+
+            // 4. Ahora sí completar
+            var resultado = await conexion.QueryFirstOrDefaultAsync<CompletarActividadResponse>(
+                "sp_CompletarActividad",
+                new { UsuarioActividadId = id },
+                commandType: CommandType.StoredProcedure);
 
             if (resultado == null)
                 return BadRequest();
 
+            // 5. Actualizar puntos
             var cliente = CrearClienteConToken();
 
-            var response =await cliente.PatchAsync( $"Usuarios/{resultado.UsuarioId}/puntos?puntos={resultado.Puntos}",null);
-
-            var contenido = await response.Content.ReadAsStringAsync();
+            var response = await cliente.PatchAsync(
+                $"Usuarios/{resultado.UsuarioId}/puntos?puntos={resultado.Puntos}",
+                null);
 
             if (!response.IsSuccessStatusCode)
                 return BadRequest("No se pudieron actualizar puntos");
