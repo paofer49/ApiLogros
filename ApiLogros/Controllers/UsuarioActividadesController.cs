@@ -4,6 +4,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Net.Http.Headers;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,6 +24,16 @@ namespace ApiLogros.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        private HttpClient CrearClienteConToken()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+            var cliente = _httpClientFactory.CreateClient("ApiUsuarios");
+            cliente.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            return cliente;
+        }
+
         //[Authorize]
         [HttpPatch("completar/{id}")]
         public async Task<IActionResult> CompletarActividad(int id)
@@ -39,7 +50,7 @@ namespace ApiLogros.Controllers
             if (resultado == null)
                 return BadRequest();
 
-            var cliente =_httpClientFactory.CreateClient("ApiUsuarios");
+            var cliente = CrearClienteConToken();
 
             var response =await cliente.PatchAsync( $"Usuarios/{resultado.UsuarioId}/puntos?puntos={resultado.Puntos}",null);
 

@@ -18,29 +18,34 @@ namespace ApiLogros.Servicios
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            try
+            {
+                await AsignarActividades();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error inicial: {ex.Message}");
+            }
+
             while (!stoppingToken.IsCancellationRequested)
             {
+                // Esperar 24 horas
+                var ahora = DateTime.Now;
+
+                var siguienteMedianoche = ahora.Date.AddDays(1);
+
+                var tiempoEspera = siguienteMedianoche - ahora;
+
+                await Task.Delay(tiempoEspera,stoppingToken);
+
                 try
                 {
                     await AsignarActividades();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"Error: {ex.Message}");
                 }
-
-                // Esperar 24 horas
-                var ahora = DateTime.Now;
-
-                var siguienteMedianoche =
-                    ahora.Date.AddDays(1);
-
-                var tiempoEspera =
-                    siguienteMedianoche - ahora;
-
-                await Task.Delay(
-                    tiempoEspera,
-                    stoppingToken);
             }
         }
 
@@ -57,8 +62,13 @@ namespace ApiLogros.Servicios
             // Obtener usuarios desde API Usuarios
             var usuarios =await cliente.GetFromJsonAsync<List<Usuario>>("Usuarios/interno");
 
-            if (usuarios == null)
+            Console.WriteLine($"[AsignacionAutomatica] Usuarios obtenidos: {usuarios?.Count ?? 0}");
+
+            if (usuarios == null || !usuarios.Any())
+            {
+                Console.WriteLine("[AsignacionAutomatica] No hay usuarios, saliendo.");
                 return;
+            }
 
             foreach (var usuario in usuarios)
             {
@@ -73,6 +83,8 @@ namespace ApiLogros.Servicios
                         commandType:
                             CommandType.StoredProcedure);
 
+                Console.WriteLine($"[AsignacionAutomatica] Usuario {usuario.Id} — actividades hoy: {total}");
+
                 if (total > 0)
                     continue;
 
@@ -83,6 +95,8 @@ namespace ApiLogros.Servicios
                         commandType:
                             CommandType.StoredProcedure);
 
+                Console.WriteLine($"[AsignacionAutomatica] Asignando {actividades.Count()} actividades al usuario {usuario.Id}");
+
                 foreach (var actividad in actividades)
                 {
                     await conexion.ExecuteAsync(
@@ -92,9 +106,9 @@ namespace ApiLogros.Servicios
                             UsuarioId = usuario.Id,
                             ActividadId = actividad.IdActividad
                         },
-                        commandType:
-                            CommandType.StoredProcedure);
+                        commandType: CommandType.StoredProcedure);
                 }
+                Console.WriteLine($"[AsignacionAutomatica] Usuario {usuario.Id} — actividades asignadas ✓");
             }
         }
     }
