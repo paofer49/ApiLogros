@@ -10,6 +10,9 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<ConexionBD>();
 
+builder.Services.AddHttpClient("ApiUsuarios",
+    client =>{client.BaseAddress = new Uri("https://localhost:7000/api/");});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

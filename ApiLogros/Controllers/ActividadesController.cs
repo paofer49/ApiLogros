@@ -34,27 +34,73 @@ namespace ApiLogros.Controllers
 
         // GET api/<ActividadesController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task <IActionResult> Get(int id)
         {
-            return "value";
+            using var conexion = _db.ObtenerConexion();
+
+            var actividad = await conexion.QueryFirstOrDefaultAsync<Actividad>(
+                "sp_ObtenerActividadPorId",
+                new { Id = id },
+                commandType: CommandType.StoredProcedure);
+
+            if (actividad == null)
+                return NotFound("Actividad no encontrada");
+
+            return Ok(actividad);
         }
 
         // POST api/<ActividadesController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public async Task<IActionResult> Post([FromBody] Actividad actividad)
         {
+            using var conexion = _db.ObtenerConexion();
+
+            await conexion.ExecuteAsync(
+                "sp_InsertarActividad",
+                new
+                {
+                    actividad.Nombre,
+                    actividad.Descripcion,
+                    actividad.Puntos
+                },
+                commandType: CommandType.StoredProcedure);
+
+            return Ok("Actividad creada");
         }
 
         // PUT api/<ActividadesController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> Put(int id, [FromBody] Actividad actividad)
         {
+            using var conexion = _db.ObtenerConexion();
+
+            await conexion.ExecuteAsync(
+                "sp_ActualizarActividad",
+                new
+                {
+                    Id = id,
+                    actividad.Nombre,
+                    actividad.Descripcion,
+                    actividad.Puntos,
+                    actividad.Activa
+                },
+                commandType: CommandType.StoredProcedure);
+
+            return Ok("Actividad actualizada");
         }
 
         // DELETE api/<ActividadesController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            using var conexion = _db.ObtenerConexion();
+
+            await conexion.ExecuteAsync(
+                "sp_EliminarActividad",
+                new { Id = id },
+                commandType: CommandType.StoredProcedure);
+
+            return Ok("Actividad Desactivada");
         }
     }
 }
