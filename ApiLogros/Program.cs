@@ -1,4 +1,5 @@
 using ApiLogros.Data;
+using ApiLogros.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ builder.Services.AddScoped<ConexionBD>();
 
 builder.Services.AddHttpClient("ApiUsuarios",
     client =>{client.BaseAddress = new Uri("https://localhost:7000/api/");});
+
+builder.Services.AddHostedService<AsignacionAutomaticaService>();
 
 var app = builder.Build();
 

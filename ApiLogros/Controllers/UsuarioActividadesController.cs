@@ -77,29 +77,29 @@ namespace ApiLogros.Controllers
             return Ok(historial);
         }
 
-        [HttpPost("asignar")]
-        public async Task<IActionResult> AsignarActividad(int usuarioId, int actividadId)
-        {
-            var cliente = _httpClientFactory.CreateClient("ApiUsuarios");
+        //[HttpPost("asignar")]
+        //public async Task<IActionResult> AsignarActividad(int usuarioId, int actividadId)
+        //{
+        //    var cliente = _httpClientFactory.CreateClient("ApiUsuarios");
 
-            var response = await cliente.GetAsync($"usuarios/{usuarioId}");
+        //    var response = await cliente.GetAsync($"usuarios/{usuarioId}");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return BadRequest("Usuario no existe");
-            }
+        //    if (!response.IsSuccessStatusCode)
+        //    {
+        //        return BadRequest("Usuario no existe");
+        //    }
 
-            using var conexion = _db.ObtenerConexion();
+        //    using var conexion = _db.ObtenerConexion();
 
-            await conexion.ExecuteAsync("sp_AsignarActividadUsuario",
-                new
-                {
-                    UsuarioId = usuarioId,
-                    ActividadId = actividadId
-                },
-                commandType: CommandType.StoredProcedure);
+        //    await conexion.ExecuteAsync("sp_AsignarActividadUsuario",
+        //        new
+        //        {
+        //            UsuarioId = usuarioId,
+        //            ActividadId = actividadId
+        //        },
+        //        commandType: CommandType.StoredProcedure);
 
-            return Ok("Actividad asignada");
-        }
+        //    return Ok("Actividad asignada");
+        //}
     }
 }
