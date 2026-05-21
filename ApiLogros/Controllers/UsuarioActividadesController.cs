@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -17,6 +18,9 @@ namespace ApiLogros.Controllers
         private readonly ConexionBD _db;
 
         private readonly IHttpClientFactory _httpClientFactory;
+
+        private int GetIdActual() => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        private bool EsAdmin() => User.IsInRole("Administrador");
 
         public UsuarioActividadesController(ConexionBD db, IHttpClientFactory httpClientFactory)
         {
@@ -66,6 +70,9 @@ namespace ApiLogros.Controllers
         [HttpGet("usuario/{usuarioId}")]
         public async Task<IActionResult> ObtenerActividadesUsuario(int usuarioId)
         {
+            if (!EsAdmin() && GetIdActual() != usuarioId)
+                return Forbid();
+
             using var conexion = _db.ObtenerConexion();
 
             var actividades =
@@ -78,6 +85,9 @@ namespace ApiLogros.Controllers
         [HttpGet("usuariohistorial/{usuarioId}")]
         public async Task<IActionResult> ObtenerHistorial(int usuarioId)
         {
+            if (!EsAdmin() && GetIdActual() != usuarioId)
+                return Forbid();
+
             using var conexion = _db.ObtenerConexion();
 
             var historial = await conexion.QueryAsync<HistorialPuntos>(
@@ -87,30 +97,5 @@ namespace ApiLogros.Controllers
 
             return Ok(historial);
         }
-
-        //[HttpPost("asignar")]
-        //public async Task<IActionResult> AsignarActividad(int usuarioId, int actividadId)
-        //{
-        //    var cliente = _httpClientFactory.CreateClient("ApiUsuarios");
-
-        //    var response = await cliente.GetAsync($"usuarios/{usuarioId}");
-
-        //    if (!response.IsSuccessStatusCode)
-        //    {
-        //        return BadRequest("Usuario no existe");
-        //    }
-
-        //    using var conexion = _db.ObtenerConexion();
-
-        //    await conexion.ExecuteAsync("sp_AsignarActividadUsuario",
-        //        new
-        //        {
-        //            UsuarioId = usuarioId,
-        //            ActividadId = actividadId
-        //        },
-        //        commandType: CommandType.StoredProcedure);
-
-        //    return Ok("Actividad asignada");
-        //}
     }
 }
