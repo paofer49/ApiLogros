@@ -6,7 +6,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+builder.WebHost.UseUrls("http://0.0.0.0:5273", "https://0.0.0.0:7284");
 
 // --- CONFIGURACIÓN DE JWT ---
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "TuClaveSecretaSuperSeguraDeAlMenos32Caracteres!";

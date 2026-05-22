@@ -38,7 +38,7 @@ namespace ApiLogros.Controllers
             return cliente;
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPatch("completar/{id}")]
         public async Task<IActionResult> CompletarActividad(int id)
         {
@@ -85,7 +85,7 @@ namespace ApiLogros.Controllers
             return Ok("Actividad completada");
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpGet("usuario/{usuarioId}")]
         public async Task<IActionResult> ObtenerActividadesUsuario(int usuarioId)
         {
@@ -101,6 +101,7 @@ namespace ApiLogros.Controllers
             return Ok(actividades);
         }
 
+        [Authorize]
         [HttpGet("usuariohistorial/{usuarioId}")]
         public async Task<IActionResult> ObtenerHistorial(int usuarioId)
         {
