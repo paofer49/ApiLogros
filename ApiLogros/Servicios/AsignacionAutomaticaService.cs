@@ -53,9 +53,7 @@ namespace ApiLogros.Servicios
         {
             using var scope =_scopeFactory.CreateScope();
 
-            var db =scope.ServiceProvider.GetRequiredService<ConexionBD>();
-
-            using var conexion = db.ObtenerConexion();
+            var asignacionService = scope.ServiceProvider.GetRequiredService<AsignacionActividadesService>();
 
             var cliente = _httpClientFactory.CreateClient("ApiUsuarios");
 
@@ -72,43 +70,7 @@ namespace ApiLogros.Servicios
 
             foreach (var usuario in usuarios)
             {
-                // Verificar si ya tiene actividades hoy
-                int total =
-                    await conexion.ExecuteScalarAsync<int>(
-                        "sp_UsuarioTieneActividadesHoy",
-                        new
-                        {
-                            UsuarioId = usuario.Id
-                        },
-                        commandType:
-                            CommandType.StoredProcedure);
-
-                Console.WriteLine($"[AsignacionAutomatica] Usuario {usuario.Id} — actividades hoy: {total}");
-
-                if (total > 0)
-                    continue;
-
-                // Obtener 5 actividades random
-                var actividades =
-                    await conexion.QueryAsync<Actividad>(
-                        "sp_Obtener5ActividadesRandom",
-                        commandType:
-                            CommandType.StoredProcedure);
-
-                Console.WriteLine($"[AsignacionAutomatica] Asignando {actividades.Count()} actividades al usuario {usuario.Id}");
-
-                foreach (var actividad in actividades)
-                {
-                    await conexion.ExecuteAsync(
-                        "sp_AsignarActividadUsuario",
-                        new
-                        {
-                            UsuarioId = usuario.Id,
-                            ActividadId = actividad.IdActividad
-                        },
-                        commandType: CommandType.StoredProcedure);
-                }
-                Console.WriteLine($"[AsignacionAutomatica] Usuario {usuario.Id} — actividades asignadas ✓");
+                await asignacionService.AsignarActividadesAUsuario(usuario.Id);
             }
         }
     }

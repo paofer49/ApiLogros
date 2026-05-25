@@ -44,6 +44,7 @@ builder.Services.AddHttpClient("ApiUsuarios",
     client =>{client.BaseAddress = new Uri("https://localhost:7000/api/");});
 
 builder.Services.AddHostedService<AsignacionAutomaticaService>();
+builder.Services.AddScoped<AsignacionActividadesService>();
 
 var app = builder.Build();
 
